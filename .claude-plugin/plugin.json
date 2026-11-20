@@ -1,0 +1,19 @@
+{
+  "name": "mockwright",
+  "displayName": "MockWright",
+  "description": "Turns course material into an interactive practice exam: mixed question types that test recall rather than reading, instant marking, weak-topic tracking, reshuffled attempts and progress synced privately across your devices.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Arseni Lysak"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "education",
+    "exam",
+    "practice-test",
+    "study",
+    "quiz",
+    "learning"
+  ],
+  "icon": ".claude-plugin/icon.png"
+}

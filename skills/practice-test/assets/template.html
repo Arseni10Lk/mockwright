@@ -1,0 +1,855 @@
+<meta charset="utf-8">
+<title>@@TITLE@@</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Practice-test template. Layout: one reading column; sticky score strip; question cards grouped by exam area.
+   Do not edit per test: everything test-specific comes from the QUIZ data injected below. */
+:root {
+  --bg: #f3f6f6; --surface: #ffffff; --sunk: #e8eeef; --ink: #13232a; --muted: #56686f; --line: #d3dde0;
+  --accent: #0b6874; --accent-ink: #ffffff; --accent-soft: #d9ecee;
+  --good: #1c7f47; --good-soft: #dcf1e4; --bad: #b8402b; --bad-soft: #f7e0da; --warn: #9a6512; --warn-soft: #f6ebd3;
+  --f-display: "Sora", "Segoe UI", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1618; --surface: #152024; --sunk: #1b292e; --ink: #e2edef; --muted: #93a6ac; --line: #2a3b40;
+    --accent: #52b6c1; --accent-ink: #062226; --accent-soft: #17363a;
+    --good: #55c487; --good-soft: #163526; --bad: #f0806b; --bad-soft: #3e1f19; --warn: #e3b456; --warn-soft: #3a2e14;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1618; --surface: #152024; --sunk: #1b292e; --ink: #e2edef; --muted: #93a6ac; --line: #2a3b40;
+  --accent: #52b6c1; --accent-ink: #062226; --accent-soft: #17363a;
+  --good: #55c487; --good-soft: #163526; --bad: #f0806b; --bad-soft: #3e1f19; --warn: #e3b456; --warn-soft: #3a2e14;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }   /* the publish wrapper adds this too; keep it so local previews match */
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15.5px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 64px;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 880px; margin: 0 auto; }
+h1, h2, h3, h4 { font-family: var(--f-display); text-wrap: balance; margin: 0; }
+sub, sup { line-height: 0; }
+code { font-family: var(--f-mono); font-size: .9em; background: var(--sunk); padding: 0 4px; border-radius: 4px; }
+svg { max-width: 100%; height: auto; }
+button { font: inherit; cursor: pointer; }
+/* Focus rings: only for keyboard focus, never clipped. Labels get the ring through the input they wrap. */
+button:focus-visible, select:focus-visible, textarea:focus-visible, input[type=text]:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.opt:has(input:focus-visible), .rubric label:has(input:focus-visible), .guess:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.vh { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+.masthead { padding-block: 28px 18px; display: grid; gap: 10px; }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.masthead h1 { font-size: clamp(26px, 5vw, 36px); font-weight: 700; letter-spacing: -.01em; }
+.masthead .intro { margin: 0; color: var(--muted); max-width: 68ch; }
+.notice { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 3px 10px; border-radius: 999px; background: var(--sunk); color: var(--muted); border: 1px solid var(--line); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.rules { font-size: 13.5px; color: var(--muted); border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; max-width: 72ch; }
+
+.strip { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; display: grid; gap: 10px; box-shadow: 0 6px 18px -14px rgba(0,0,0,.35); }
+.strip-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
+.score-big { font-family: var(--f-display); font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.score-big small { font-size: 14px; color: var(--muted); font-weight: 500; }
+.stat { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.stat b { color: var(--ink); font-weight: 600; }
+.save { margin-left: auto; font-size: 12.5px; padding: 3px 10px; border-radius: 999px; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.save.ok { background: var(--good-soft); color: var(--good); }
+.save.busy { background: var(--sunk); color: var(--muted); }
+.save.local { background: var(--warn-soft); color: var(--warn); }
+.bars { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+.bar { display: grid; gap: 3px; min-width: 0; }
+.bar-label { display: flex; justify-content: space-between; gap: 4px; font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.bar-label span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-track { height: 7px; border-radius: 4px; background: var(--sunk); display: flex; overflow: hidden; }
+.bar-track i { display: block; height: 100%; }
+.bar-track .g { background: var(--good); }
+.bar-track .r { background: var(--bad); }
+.strip-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn { border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 6px 12px; border-radius: 8px; font-size: 13.5px; }
+.btn:hover:not(:disabled) { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+.btn.danger { background: var(--bad); color: var(--surface); border-color: var(--bad); font-weight: 600; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.confirm { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 12px; border-radius: 8px; background: var(--warn-soft); color: var(--ink); font-size: 14px; }
+.confirm p { margin: 0; flex: 1 1 260px; min-width: 0; }
+/* Phones: the full strip scrolls away; a one-line score bar stays pinned so the questions keep the screen. */
+.mini { display: none; }
+@media (max-width: 620px) {
+  .save { margin-left: 0; }
+  .strip { position: static; }
+  .mini { display: flex; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; gap: 10px; align-items: center; justify-content: space-between; margin: 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))); padding: 7px max(16px, env(safe-area-inset-left, 0px)); background: var(--surface); border-bottom: 1px solid var(--line); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .mini b { font-family: var(--f-display); font-size: 15px; }
+  .mini .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); flex: none; }
+  .mini .dot.ok { background: var(--good); } .mini .dot.local { background: var(--warn); }
+}
+
+.panels { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 12px; margin-top: 14px; }
+@media (max-width: 720px) { .panels { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; min-width: 0; }
+.panel h2 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+.panel ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 13.5px; }
+.panel li { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.panel .empty { color: var(--muted); font-size: 13.5px; margin: 0; }
+.pct { font-family: var(--f-mono); font-size: 12.5px; padding: 0 6px; border-radius: 4px; background: var(--bad-soft); color: var(--bad); }
+.pct.guess { background: var(--warn-soft); color: var(--warn); }
+.idlink { font-family: var(--f-mono); font-size: 12.5px; color: var(--accent); text-decoration: none; border-bottom: 1px dotted var(--accent); }
+.hist li { font-variant-numeric: tabular-nums; }
+.hist .when { color: var(--muted); }
+
+.filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 18px 0 6px; }
+.chip { border: 1px solid var(--line); background: var(--surface); color: var(--muted); padding: 4px 12px; border-radius: 999px; font-size: 13px; }
+.chip[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); font-weight: 600; }
+
+.area { margin-top: 26px; display: grid; gap: 12px; }
+.area-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+.area-head h2 { font-size: 19px; font-weight: 600; }
+.area-head .tag { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.qcard { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; display: grid; gap: 12px; min-width: 0; }
+.qcard.done-good { border-color: color-mix(in srgb, var(--good) 45%, var(--line)); }
+.qcard.done-bad { border-color: color-mix(in srgb, var(--bad) 45%, var(--line)); }
+.qhead { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 12.5px; color: var(--muted); }
+.qid { font-family: var(--f-mono); font-weight: 500; color: var(--accent); background: var(--accent-soft); padding: 1px 7px; border-radius: 5px; }
+.qtype { text-transform: uppercase; letter-spacing: .06em; font-size: 11px; }
+.qpts { margin-left: auto; font-variant-numeric: tabular-nums; }
+.qprompt { font-size: 15.5px; min-width: 0; overflow-x: auto; }
+.opts { display: grid; gap: 6px; min-width: 0; }
+.opt { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; }
+.opt:hover { border-color: var(--accent); }
+.opt input { margin-top: 4px; accent-color: var(--accent); flex: none; }
+.opt span { min-width: 0; }
+.opt.is-correct { border-color: var(--good); background: var(--good-soft); }
+.opt.is-wrong { border-color: var(--bad); background: var(--bad-soft); }
+.opt.is-missed { border-color: var(--good); border-style: dashed; }
+.locked .opt { cursor: default; }
+.locked .opt:hover { border-color: var(--line); }
+.locked .opt.is-correct:hover, .locked .opt.is-missed:hover { border-color: var(--good); }
+.locked .opt.is-wrong:hover { border-color: var(--bad); }
+.tfrow, .mrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; align-items: center; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; }
+/* True/false segmented control: the radio is visually hidden inside its label; the ring is inset so the group's rounded edge never clips it. */
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; background: var(--surface); }
+.seg label { position: relative; padding: 4px 12px; font-size: 13px; cursor: pointer; user-select: none; color: var(--ink); }
+.seg label + label { border-left: 1px solid var(--line); }
+.seg label:hover { background: var(--sunk); }
+.seg label:has(input:checked) { background: var(--accent); color: var(--accent-ink); }
+.seg label:has(input:focus-visible) { box-shadow: inset 0 0 0 2px var(--ink); }
+.seg label:has(input:disabled) { cursor: default; }
+.seg label:has(input:disabled):not(:has(input:checked)):hover { background: transparent; }
+.mrow select { font: inherit; font-size: 13.5px; max-width: 100%; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+@media (max-width: 620px) { .tfrow, .mrow { grid-template-columns: minmax(0, 1fr); } .mrow select { width: 100%; } .tfrow .seg { justify-self: start; } }
+.row-ok { border-color: var(--good); background: var(--good-soft); }
+.row-bad { border-color: var(--bad); background: var(--bad-soft); }
+.fix { grid-column: 1 / -1; font-size: 13px; color: var(--good); }
+.olist { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.oitem { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; }
+.oitem .n { font-family: var(--f-mono); font-size: 12.5px; color: var(--muted); }
+.mv { display: inline-flex; gap: 4px; }
+.mv button { border: 1px solid var(--line); background: var(--sunk); color: var(--ink); width: 32px; height: 30px; border-radius: 6px; }
+.mv button:disabled { opacity: .35; cursor: default; }
+.cpart { display: grid; gap: 6px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; min-width: 0; }
+.cpart .lab { font-weight: 600; margin-right: 4px; }
+.cin { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.cin input { font-family: var(--f-mono); font-size: 15px; width: 170px; max-width: 100%; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.cin .unit { font-family: var(--f-mono); font-size: 13.5px; }
+.hint { font-size: 12.5px; color: var(--muted); }
+.cres { font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.cres.ok { color: var(--good); } .cres.bad { color: var(--bad); }
+textarea { width: 100%; min-height: 150px; font: inherit; font-size: 14.5px; padding: 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); resize: vertical; }
+.rubric { display: grid; gap: 6px; }
+.rubric label { display: flex; gap: 10px; align-items: flex-start; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; }
+.rubric input { margin-top: 4px; accent-color: var(--good); flex: none; }
+.rubric .rp { margin-left: auto; font-family: var(--f-mono); font-size: 12px; color: var(--muted); white-space: nowrap; }
+.model { background: var(--sunk); border-radius: 8px; padding: 10px 12px; font-size: 14px; }
+.model h4, .explain h4 { margin: 0 0 4px; font-size: 13px; font-weight: 600; }
+.qactions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.guess { margin-left: auto; display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); cursor: pointer; border-radius: 6px; padding: 2px 4px; }
+.guess input { accent-color: var(--warn); }
+.result { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13.5px; }
+.badge { font-family: var(--f-mono); font-size: 12.5px; padding: 2px 8px; border-radius: 5px; }
+.badge.full { background: var(--good-soft); color: var(--good); }
+.badge.part { background: var(--warn-soft); color: var(--warn); }
+.badge.zero { background: var(--bad-soft); color: var(--bad); }
+.explain { border-top: 1px dashed var(--line); padding-top: 10px; font-size: 14px; overflow-x: auto; }
+.foot { margin-top: 36px; color: var(--muted); font-size: 13px; }
+@media (prefers-reduced-motion: no-preference) { .qcard { transition: border-color .2s; } }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="eyebrow" id="hEyebrow"></div>
+    <h1 id="hTitle"></h1>
+    <p class="intro" id="hIntro"></p>
+    <div class="notice" id="hNotices"><span class="pill warn">Unofficial practice test, not the real exam</span></div>
+    <div class="rules" id="hRules">Numeric answers: decimal comma or dot both work (0,357 or 0.357), and so does e-notation (3e6). Thousands separators are fine in whole-number answers. Each input states the precision it accepts.</div>
+  </header>
+
+  <div class="mini" id="mini" aria-hidden="true"><span><b id="mTotal">0</b> / <span id="mMax">0</span> pts</span><span id="mAnswered">0 answered</span><span class="dot busy" id="mDot"></span></div>
+  <section class="strip" id="strip" aria-label="Score">
+    <div class="strip-top">
+      <div class="score-big" id="sTotal">0 <small>/ 0 pts</small></div>
+      <div class="stat">Answered <b id="sAnswered">0</b> / <span id="sCount">0</span></div>
+      <div class="stat">Accuracy on answered <b id="sAcc">–</b></div>
+      <div class="stat">From guesses <b id="sGuess">0</b> pts</div>
+      <div class="save busy" id="sSave" role="status">Connecting…</div>
+    </div>
+    <div class="bars" id="sBars"></div>
+    <div class="strip-actions">
+      <button class="btn" id="btnNew" type="button">Start new attempt</button>
+      <button class="btn" id="btnReset" type="button">Reset answers</button>
+    </div>
+    <div class="confirm" id="confirmBar" hidden role="alertdialog" aria-labelledby="confirmMsg">
+      <p id="confirmMsg"></p>
+      <button class="btn danger" id="confirmYes" type="button">Confirm</button>
+      <button class="btn" id="confirmNo" type="button">Cancel</button>
+    </div>
+  </section>
+
+  <div class="panels">
+    <section class="panel" aria-labelledby="focusH">
+      <h2 id="focusH">Where to focus</h2>
+      <div id="focusBody"><p class="empty">Check a few answers to see your weak topics here.</p></div>
+    </section>
+    <section class="panel" aria-labelledby="histH">
+      <h2 id="histH">Attempt history</h2>
+      <div id="histBody"><p class="empty">Archived attempts appear here when you start a new one.</p></div>
+    </section>
+  </div>
+
+  <nav class="filters" id="filters" aria-label="Filter questions"></nav>
+  <main id="quiz"></main>
+  <p class="foot" id="hFoot"></p>
+</div>
+
+<script>
+/*@@QUIZ_DATA@@*/
+</script>
+<script>
+(function () {
+  "use strict";
+  if (typeof QUIZ !== "object" || !QUIZ || !Array.isArray(QUIZ.questions)) throw new Error("QUIZ data missing: the build step did not inject it");
+  var META = QUIZ.meta || {}, AREAS = QUIZ.areas || [], QUESTIONS = QUIZ.questions;
+  var SLUG = META.slug;
+  var LS_KEY = "ptb:" + SLUG;
+  var DOC_VERSION = 2;
+  var TYPE_LABEL = { mcq: "Single choice", multi: "Select all", tf: "True / false", match: "Matching", order: "Ordering", calc: "Calculation", open: "Open question" };
+  var QMAP = {}, AREA_BY_ID = {};
+  QUESTIONS.forEach(function (q) { QMAP[q.id] = q; });
+  AREAS.forEach(function (a) { AREA_BY_ID[a.id] = a; });
+
+  /* ================= header ================= */
+  document.getElementById("hEyebrow").textContent = META.eyebrow || "";
+  document.getElementById("hTitle").textContent = META.heading || META.title || "";
+  document.getElementById("hIntro").innerHTML = META.intro || "";
+  document.getElementById("hFoot").innerHTML = META.footer || "";
+  (META.notices || []).forEach(function (n) {
+    var s = document.createElement("span");
+    s.className = "pill" + (n.warn ? " warn" : "");
+    s.innerHTML = n.text;
+    document.getElementById("hNotices").appendChild(s);
+  });
+  if (!QUESTIONS.some(function (q) { return q.type === "calc"; })) document.getElementById("hRules").hidden = true;
+
+  /* ================= points ================= */
+  function ptsOf(q) {
+    switch (q.type) {
+      case "mcq": return q.pts || 1;
+      case "multi": return q.pts || 2;
+      case "tf": return q.items.length;
+      case "match": return q.left.length;
+      case "order": return q.pts || 2;
+      case "calc": return q.parts.reduce(function (s, p) { return s + (p.pts || 1); }, 0);
+      case "open": return q.rubric.reduce(function (s, r) { return s + r.pts; }, 0);
+    }
+    throw new Error("Unknown question type " + q.type + " in " + q.id);
+  }
+  var AREA_MAX = {}, TOTAL_MAX = 0;
+  AREAS.forEach(function (a) { AREA_MAX[a.id] = 0; });
+  QUESTIONS.forEach(function (q) { q._pts = ptsOf(q); AREA_MAX[q.area] += q._pts; TOTAL_MAX += q._pts; });
+
+  /* ================= seeded shuffling ================= */
+  function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function hashStr(s) { var h = 2166136261; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function perm(n, key) {
+    var r = mulberry32((doc.attempt.seed ^ hashStr(key)) >>> 0), a = [];
+    for (var i = 0; i < n; i++) a.push(i);
+    for (var j = n - 1; j > 0; j--) { var k = Math.floor(r() * (j + 1)); var t = a[j]; a[j] = a[k]; a[k] = t; }
+    return a;
+  }
+  function initialOrder(q) {
+    var p = perm(q.items.length, q.id + ":order");
+    if (p.every(function (v, i) { return v === i; })) p.push(p.shift());
+    return p;
+  }
+
+  /* ================= saved document =================
+     doc = { dv, attempt: { id, seed, startedAt, answers: { qid: entry } }, history: [summary], superseded: [attemptId], savedAt }
+     entry = { v, resp, locked, earned, revealed, guessed, marked, ticks, at }   (at = time of the last change)
+     savedAt = 0 means this device has never changed anything: it must defer to the account copy. */
+  function rid() { return Date.now().toString(36) + "-" + Math.floor(Math.random() * 1e9).toString(36); }
+  function newSeed() { return Math.floor(Math.random() * 4294967296) >>> 0; }
+  function blankAttempt(seed) { return { id: rid(), seed: seed == null ? newSeed() : seed, startedAt: Date.now(), answers: {} }; }
+  function blankDoc() { return { dv: DOC_VERSION, attempt: blankAttempt(), history: [], superseded: [], savedAt: 0 }; }
+  function clone(x) { return JSON.parse(JSON.stringify(x)); }
+  function normalizeDoc(d) {
+    if (!d || typeof d !== "object" || d.dv !== DOC_VERSION || !d.attempt || typeof d.attempt.id !== "string") return null;
+    d = clone(d);
+    var a = d.attempt;
+    if (typeof a.seed !== "number") a.seed = newSeed();
+    if (!a.answers || typeof a.answers !== "object") a.answers = {};
+    Object.keys(a.answers).forEach(function (id) {
+      var q = QMAP[id], e = a.answers[id];
+      if (!q || !e || e.v !== q.v) delete a.answers[id];   // question changed or removed: drop only that answer
+      else if (typeof e.at !== "number") e.at = 0;
+    });
+    if (!Array.isArray(d.history)) d.history = [];
+    if (!Array.isArray(d.superseded)) d.superseded = [];
+    if (typeof d.savedAt !== "number") d.savedAt = 0;
+    return d;
+  }
+  function lastActivity(att) { var m = 0; Object.keys(att.answers).forEach(function (k) { m = Math.max(m, att.answers[k].at || 0); }); return m; }
+  function hasProgress(att) { return Object.keys(att.answers).some(function (k) { return att.answers[k].locked; }); }
+  function pickEntry(x, y) {
+    if (!x) return y; if (!y) return x;
+    if (!!x.locked !== !!y.locked) return x.locked ? x : y;      // a checked answer is never undone by a draft
+    if ((x.at || 0) !== (y.at || 0)) return (x.at || 0) > (y.at || 0) ? x : y;
+    return JSON.stringify(x) >= JSON.stringify(y) ? x : y;        // deterministic tie-break on every device
+  }
+  function uniq(arr) { var s = {}, out = []; arr.forEach(function (v) { if (!s[v]) { s[v] = 1; out.push(v); } }); return out.sort(); }
+  /* Deterministic merge: every device that merges the same two documents gets the same result, so devices converge. */
+  function mergeDocs(a, b) {
+    if (!a) return clone(b); if (!b) return clone(a);
+    var superseded = uniq(a.superseded.concat(b.superseded));
+    var hist = {}; a.history.concat(b.history).forEach(function (h) { hist[h.attemptId] = h; });
+    var att;
+    var A = a.attempt, B = b.attempt;
+    if (A.id === B.id) {
+      att = { id: A.id, seed: A.seed, startedAt: Math.min(A.startedAt, B.startedAt), answers: {} };
+      uniq(Object.keys(A.answers).concat(Object.keys(B.answers))).forEach(function (k) { att.answers[k] = clone(pickEntry(A.answers[k], B.answers[k])); });
+    } else {
+      var aDead = superseded.indexOf(A.id) >= 0, bDead = superseded.indexOf(B.id) >= 0;
+      var win, lose;
+      if (aDead !== bDead) { win = aDead ? B : A; lose = aDead ? A : B; }
+      else {
+        var pa = hasProgress(A), pb = hasProgress(B), la = lastActivity(A), lb = lastActivity(B);
+        if (pa !== pb) win = pa ? A : B;                 // checked answers beat drafts or an empty attempt
+        else if (la !== lb) win = la > lb ? A : B;
+        else win = A.id > B.id ? A : B;
+        lose = win === A ? B : A;
+        if (superseded.indexOf(lose.id) < 0) superseded.push(lose.id);
+        if (hasProgress(lose) && !hist[lose.id]) { hist[lose.id] = summaryOf(lose, "replaced by another device"); hist[lose.id].date = lastActivity(lose); }
+        superseded = uniq(superseded);
+      }
+      att = clone(win);
+    }
+    var history = Object.keys(hist).map(function (k) { return hist[k]; }).sort(function (x, y) { return x.date - y.date; });
+    return { dv: DOC_VERSION, attempt: att, history: history, superseded: superseded, savedAt: Math.max(a.savedAt, b.savedAt) };
+  }
+  /* Does the merged document hold anything the account copy lacks? Then it must be written back. */
+  function needsPush(m, r) {
+    if (!r) return m.savedAt > 0;
+    if (m.attempt.id !== r.attempt.id) return true;
+    if (m.superseded.length !== r.superseded.length || m.history.length !== r.history.length) return true;
+    return Object.keys(m.attempt.answers).some(function (k) {
+      var x = m.attempt.answers[k], y = r.attempt.answers[k];
+      return !y || (x.at || 0) !== (y.at || 0) || !!x.locked !== !!y.locked || JSON.stringify(x) !== JSON.stringify(y);
+    });
+  }
+
+  var doc = null;
+  function att() { return doc.attempt; }
+  function peek(id) { return att().answers[id] || null; }
+  function ans(id) { var a = att().answers; if (!a[id]) a[id] = { v: QMAP[id].v }; return a[id]; }
+  function touch(id) { ans(id).at = Date.now(); }
+
+  /* ================= numbers ================= */
+  function parseNum(str, isInt) {
+    if (str == null) return NaN;
+    var s = String(str).trim().replace(/[\s  '_]/g, "");
+    if (!s) return NaN;
+    if (isInt) s = s.replace(/[,.](?=\d{3}(?!\d))/g, "");
+    s = s.replace(",", ".").replace(/[×x]10\^?/i, "e").replace(/^−/, "-");
+    if (!/^[-+]?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?$/i.test(s)) return NaN;
+    return Number(s);
+  }
+  function tolRange(p) { if (p.int) return [p.ans, p.ans]; var d = p.abs ? p.tol : Math.abs(p.ans) * p.tol; return [p.ans - d, p.ans + d]; }
+  function tolLabel(p) { return p.int ? "±0" : (p.abs ? "±" + p.tol + " absolute" : "±" + +(p.tol * 100).toFixed(4) + "%"); }
+  function hintText(p) {
+    if (p.int) return "Exact whole number, tolerance " + tolLabel(p) + ". 2416, 2 416 and 2,416 are read the same.";
+    return "Tolerance " + tolLabel(p) + " · give " + (p.sig || 3) + " significant figures" + (p.note ? " · " + p.note : "") + ".";
+  }
+  function fmtNum(x, p) { if (p && p.int) return Math.round(x).toLocaleString("en-US"); return Number(x.toPrecision((p && p.sig ? p.sig : 3) + 1)).toString(); }
+  function fmtPts(x) { return (Math.round(x * 100) / 100).toString(); }
+  function partOk(p, raw) { var v = parseNum(raw, p.int), rg = tolRange(p), eps = Math.abs(p.ans) * 1e-9 + 1e-12; return isFinite(v) && v >= rg[0] - eps && v <= rg[1] + eps; }
+
+  /* ================= grading ================= */
+  function isComplete(q, a) {
+    var r = a && a.resp;
+    switch (q.type) {
+      case "mcq": return r != null;
+      case "multi": return Array.isArray(r) && r.length > 0;
+      case "tf": return !!r && q.items.every(function (_, i) { return typeof r[i] === "boolean"; });
+      case "match": return !!r && q.left.every(function (_, i) { return typeof r[i] === "number"; });
+      case "order": return true;
+      case "calc": return !!r && q.parts.every(function (p, i) { return isFinite(parseNum(r[i], p.int)); });
+      case "open": return !!r && typeof r.text === "string" && r.text.trim().length >= 20;
+    }
+    return false;
+  }
+  function grade(q, a) {
+    var r = a.resp;
+    switch (q.type) {
+      case "mcq": return r === q.correct ? q._pts : 0;
+      case "multi": var right = 0, wrong = 0; (r || []).forEach(function (i) { if (q.correct.indexOf(i) >= 0) right++; else wrong++; }); return Math.max(0, (right - wrong) / q.correct.length) * q._pts;
+      case "tf": var e = 0; q.items.forEach(function (it, i) { if (r && r[i] === it.a) e++; }); return e;
+      case "match": var m = 0; q.left.forEach(function (_, i) { if (r && r[i] === q.answer[i]) m++; }); return m;
+      case "order": var seq = r || initialOrder(q), c = 0; seq.forEach(function (o, pos) { if (o === pos) c++; }); return Math.round(q._pts * c / seq.length * 2) / 2;
+      case "calc": var ce = 0; q.parts.forEach(function (p, i) { if (partOk(p, r && r[i])) ce += (p.pts || 1); }); return ce;
+    }
+    return 0;
+  }
+  function prefillTicks(q, text) { var t = (text || "").toLowerCase(); return q.rubric.map(function (rb) { return (rb.keys || []).some(function (k) { return t.indexOf(k.toLowerCase()) >= 0; }); }); }
+
+  /* ================= DOM helpers ================= */
+  function el(tag, attrs, kids) {
+    var n = document.createElement(tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) {
+      var v = attrs[k];
+      if (v == null || v === false) return;
+      if (k === "html") n.innerHTML = v; else if (k === "text") n.textContent = v;
+      else if (k.slice(0, 2) === "on") n.addEventListener(k.slice(2), v);
+      else if (v === true) n.setAttribute(k, ""); else n.setAttribute(k, v);
+    });
+    (kids || []).forEach(function (c) { if (c != null) n.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+    return n;
+  }
+
+  /* ================= cards ================= */
+  var cards = {}, pendingRefresh = {};
+  function fillCard(card, q) {
+    var a = peek(q.id) || {}, locked = !!a.locked;
+    card.replaceChildren();
+    card.classList.toggle("locked", locked);
+    card.classList.toggle("done-good", locked && a.earned >= q._pts - 1e-9);
+    card.classList.toggle("done-bad", locked && a.earned < q._pts - 1e-9);
+    card.appendChild(el("div", { class: "qhead" }, [
+      el("span", { class: "qid", text: q.id }), el("span", { class: "qtype", text: TYPE_LABEL[q.type] }), el("span", { text: q.topic }),
+      el("span", { class: "qpts", text: locked ? fmtPts(a.earned) + " / " + q._pts + " pts" : q._pts + (q._pts === 1 ? " pt" : " pts") })
+    ]));
+    card.appendChild(el("div", { class: "qprompt", html: q.prompt + (q.figure ? "<div class=\"figure\">" + q.figure + "</div>" : "") }));
+    var body = BODY[q.type](q, a, locked, card);
+    if (!body) throw new Error("No body rendered for " + q.id);
+    card.appendChild(body);
+    card.appendChild(buildActions(q, a, locked, card));
+    if (locked) card.appendChild(buildResult(q, a));
+  }
+  function refresh(q) { var c = cards[q.id]; if (!c) throw new Error("Missing card " + q.id); delete pendingRefresh[q.id]; fillCard(c, q); }
+  function changed(q, card) {
+    touch(q.id); save();
+    var btn = card.querySelector("[data-role=check]");
+    if (btn) btn.disabled = !isComplete(q, peek(q.id));
+    renderFilters();
+  }
+  function settle(q) { touch(q.id); save(); refresh(q); updateAll(); }
+
+  var BODY = {
+    mcq: function (q, a, locked, card) {
+      var wrap = el("div", { class: "opts", role: "radiogroup", "aria-label": "Options" });
+      perm(q.options.length, q.id + ":opt").forEach(function (o) {
+        var cls = "opt" + (locked ? (o === q.correct ? " is-correct" : (a.resp === o ? " is-wrong" : "")) : "");
+        var input = el("input", { type: "radio", name: "r-" + q.id, id: "r-" + q.id + "-" + o, checked: a.resp === o, disabled: locked,
+          onchange: function () { ans(q.id).resp = o; changed(q, card); } });
+        wrap.appendChild(el("label", { class: cls, for: "r-" + q.id + "-" + o }, [input, el("span", { html: q.options[o] })]));
+      });
+      return wrap;
+    },
+    multi: function (q, a, locked, card) {
+      var wrap = el("div", { class: "opts" }), picks = a.resp || [];
+      perm(q.options.length, q.id + ":opt").forEach(function (o) {
+        var picked = picks.indexOf(o) >= 0, isC = q.correct.indexOf(o) >= 0, cls = "opt";
+        if (locked) cls += isC && picked ? " is-correct" : (!isC && picked ? " is-wrong" : (isC ? " is-missed" : ""));
+        var input = el("input", { type: "checkbox", id: "m-" + q.id + "-" + o, checked: picked, disabled: locked,
+          onchange: function (ev) { var A = ans(q.id), cur = (A.resp || []).filter(function (x) { return x !== o; }); if (ev.target.checked) cur.push(o); A.resp = cur; changed(q, card); } });
+        wrap.appendChild(el("label", { class: cls, for: "m-" + q.id + "-" + o }, [input, el("span", { html: q.options[o] })]));
+      });
+      return wrap;
+    },
+    tf: function (q, a, locked, card) {
+      var wrap = el("div", { class: "opts" });
+      q.items.forEach(function (it, i) {
+        var cur = a.resp ? a.resp[i] : undefined;
+        var seg = el("div", { class: "seg", role: "radiogroup", "aria-label": "Statement " + (i + 1) });
+        [true, false].forEach(function (val) {
+          var id = "t-" + q.id + "-" + i + "-" + (val ? "t" : "f");
+          var input = el("input", { type: "radio", class: "vh", name: "t-" + q.id + "-" + i, id: id, checked: cur === val, disabled: locked,
+            onchange: function () { var A = ans(q.id); A.resp = A.resp || {}; A.resp[i] = val; changed(q, card); } });
+          seg.appendChild(el("label", { for: id }, [input, val ? "True" : "False"]));
+        });
+        var row = el("div", { class: "tfrow" + (locked ? (cur === it.a ? " row-ok" : " row-bad") : "") }, [el("div", { html: it.s }), seg]);
+        if (locked && cur !== it.a) row.appendChild(el("div", { class: "fix", text: "Correct: " + (it.a ? "True" : "False") }));
+        wrap.appendChild(row);
+      });
+      return wrap;
+    },
+    match: function (q, a, locked, card) {
+      var wrap = el("div", { class: "opts" }), order = perm(q.right.length, q.id + ":right");
+      q.left.forEach(function (lt, i) {
+        var cur = a.resp ? a.resp[i] : undefined;
+        var sel = el("select", { id: "s-" + q.id + "-" + i, disabled: locked, "aria-label": "Match for item " + (i + 1),
+          onchange: function (ev) { var A = ans(q.id); A.resp = A.resp || {}; if (ev.target.value === "") delete A.resp[i]; else A.resp[i] = Number(ev.target.value); changed(q, card); } });
+        sel.appendChild(el("option", { value: "", text: "Choose…" }));
+        order.forEach(function (o) { var op = el("option", { value: String(o), html: q.right[o] }); op.textContent = op.textContent; if (cur === o) op.selected = true; sel.appendChild(op); });
+        var row = el("div", { class: "mrow" + (locked ? (cur === q.answer[i] ? " row-ok" : " row-bad") : "") }, [el("div", { html: lt }), sel]);
+        if (locked && cur !== q.answer[i]) row.appendChild(el("div", { class: "fix", html: "Correct: " + q.right[q.answer[i]] }));
+        wrap.appendChild(row);
+      });
+      return wrap;
+    },
+    order: function (q, a, locked, card) {
+      var seq = a.resp || initialOrder(q), list = el("ol", { class: "olist" });
+      seq.forEach(function (o, pos) {
+        var move = function (d) {
+          return function () {
+            var A = ans(q.id), s = (A.resp || initialOrder(q)).slice(), j = pos + d, t = s[pos]; s[pos] = s[j]; s[j] = t; A.resp = s;
+            touch(q.id); save(); refresh(q); renderFilters();
+            var b = cards[q.id].querySelector("[data-mv='" + j + (d < 0 ? "u" : "d") + "']");
+            if (!b || b.disabled) b = cards[q.id].querySelector("[data-mv='" + j + (d < 0 ? "d" : "u") + "']");
+            if (b) b.focus();
+          };
+        };
+        list.appendChild(el("li", { class: "oitem" + (locked ? (o === pos ? " row-ok" : " row-bad") : "") }, [
+          el("span", { class: "n", text: String(pos + 1) }), el("span", { html: q.items[o] }),
+          el("span", { class: "mv" }, [
+            el("button", { type: "button", "data-mv": pos + "u", "aria-label": "Move up", disabled: locked || pos === 0, onclick: move(-1), text: "↑" }),
+            el("button", { type: "button", "data-mv": pos + "d", "aria-label": "Move down", disabled: locked || pos === seq.length - 1, onclick: move(1), text: "↓" })
+          ])
+        ]));
+      });
+      if (!locked) return list;
+      var correct = el("ol", { class: "hint" });
+      q.items.forEach(function (t) { correct.appendChild(el("li", { html: t })); });
+      return el("div", { class: "opts" }, [list, el("div", { class: "hint" }, [el("b", { text: "Correct order:" }), correct])]);
+    },
+    calc: function (q, a, locked, card) {
+      var wrap = el("div", { class: "opts" });
+      q.parts.forEach(function (p, i) {
+        var raw = a.resp ? a.resp[i] : "";
+        var input = el("input", { type: "text", inputmode: "decimal", autocomplete: "off", id: "c-" + q.id + "-" + i, value: raw || "", disabled: locked, "aria-label": "Answer " + (p.label || i + 1),
+          oninput: function (ev) { var A = ans(q.id); A.resp = A.resp || {}; A.resp[i] = ev.target.value; changed(q, card); } });
+        var line = el("div", { class: "cin" }, [input, p.unit ? el("span", { class: "unit", html: p.unit }) : null, el("span", { class: "hint", "data-tol": tolLabel(p), text: hintText(p) })]);
+        var part = el("div", { class: "cpart" }, [el("div", { html: (p.label ? "<span class=\"lab\">" + p.label + "</span>" : "") + p.text + " <span class=\"hint\">(" + (p.pts || 1) + " pt)</span>" }), line]);
+        if (locked) {
+          var ok = !a.revealed && partOk(p, raw), rg = tolRange(p);
+          var msg = ok ? "✓ Correct (expected " + fmtNum(p.ans, p) + ")" : (a.revealed ? "Answer: " + fmtNum(p.ans, p) : "✗ Expected " + fmtNum(p.ans, p)) + (p.int ? " exactly" : " · accepted " + fmtNum(rg[0], p) + " to " + fmtNum(rg[1], p));
+          part.appendChild(el("div", { class: "cres " + (ok ? "ok" : "bad"), text: msg }));
+        }
+        wrap.appendChild(part);
+      });
+      return wrap;
+    },
+    open: function (q, a, locked, card) {
+      var r = a.resp || {}, wrap = el("div", { class: "opts" });
+      var ta = el("textarea", { id: "o-" + q.id, disabled: locked || a.marked, "aria-label": "Your answer", placeholder: "Write your answer as you would on the exam…",
+        oninput: function (ev) { var A = ans(q.id); A.resp = A.resp || {}; A.resp.text = ev.target.value; changed(q, card); } });
+      ta.value = r.text || "";
+      wrap.appendChild(ta);
+      if (a.marked || locked) {
+        var rub = el("div", { class: "rubric" }), ticks = a.ticks || q.rubric.map(function () { return false; });
+        q.rubric.forEach(function (rb, i) {
+          var cb = el("input", { type: "checkbox", id: "rb-" + q.id + "-" + i, checked: !!ticks[i], disabled: locked,
+            onchange: function (ev) { var A = ans(q.id); A.ticks = (A.ticks || ticks).slice(); A.ticks[i] = ev.target.checked; touch(q.id); save(); updateOpenTotal(q, card); } });
+          rub.appendChild(el("label", { for: "rb-" + q.id + "-" + i }, [cb, el("span", { html: rb.text }), el("span", { class: "rp", text: "+" + rb.pts })]));
+        });
+        wrap.appendChild(el("div", {}, [el("h4", { class: "hint", text: locked ? "Rubric" : "Rubric: items whose key terms appear in your text are pre-ticked. Adjust honestly, then confirm." }), rub]));
+        wrap.appendChild(el("div", { class: "model" }, [el("h4", { text: "Model answer" }), el("div", { html: q.model })]));
+      }
+      return wrap;
+    }
+  };
+  function tickTotal(q, A) { var t = 0; q.rubric.forEach(function (rb, i) { if (A && A.ticks && A.ticks[i]) t += rb.pts; }); return t; }
+  function updateOpenTotal(q, card) { var b = card.querySelector("[data-role=confirm]"); if (b) b.textContent = "Confirm score (" + tickTotal(q, peek(q.id)) + " / " + q._pts + ")"; }
+  function buildActions(q, a, locked) {
+    var row = el("div", { class: "qactions" });
+    if (!locked) {
+      if (q.type === "open" && a.marked) {
+        row.appendChild(el("button", { class: "btn primary", type: "button", "data-role": "confirm", text: "Confirm score (" + tickTotal(q, a) + " / " + q._pts + ")",
+          onclick: function () { var A = ans(q.id); A.earned = tickTotal(q, A); A.locked = true; settle(q); } }));
+      } else if (q.type === "open") {
+        row.appendChild(el("button", { class: "btn primary", type: "button", "data-role": "check", disabled: !isComplete(q, a), text: "Mark my answer",
+          onclick: function () { var A = ans(q.id); A.marked = true; A.ticks = prefillTicks(q, A.resp && A.resp.text); touch(q.id); save(); refresh(q); } }));
+      } else {
+        row.appendChild(el("button", { class: "btn primary", type: "button", "data-role": "check", disabled: !isComplete(q, a), text: "Check answer",
+          onclick: function () { var A = ans(q.id); if (q.type === "order" && !A.resp) A.resp = initialOrder(q); A.earned = grade(q, A); A.locked = true; settle(q); } }));
+      }
+      row.appendChild(el("button", { class: "btn", type: "button", "data-role": "reveal", text: "Show answer (0 pts)",
+        onclick: function () { var A = ans(q.id); A.revealed = true; A.locked = true; A.earned = 0; if (q.type === "order" && !A.resp) A.resp = initialOrder(q); settle(q); } }));
+    }
+    var g = el("input", { type: "checkbox", id: "g-" + q.id, checked: !!a.guessed, onchange: function (ev) { ans(q.id).guessed = ev.target.checked; touch(q.id); save(); updateAll(); } });
+    row.appendChild(el("label", { class: "guess", for: "g-" + q.id }, [g, "I guessed"]));
+    return row;
+  }
+  function buildResult(q, a) {
+    var cls = a.earned >= q._pts - 1e-9 ? "full" : (a.earned > 0 ? "part" : "zero");
+    return el("div", { class: "opts" }, [
+      el("div", { class: "result" }, [el("span", { class: "badge " + cls, text: a.revealed ? "Answer shown · 0 / " + q._pts + " pts" : fmtPts(a.earned) + " / " + q._pts + " pts" }), a.guessed ? el("span", { class: "badge part", text: "guessed" }) : null]),
+      el("div", { class: "explain" }, [el("h4", { text: "Explanation" }), el("div", { html: q.explain })])
+    ]);
+  }
+
+  /* ================= layout & panels ================= */
+  var filter = "all", quiz = document.getElementById("quiz");
+  function renderAll() {
+    cards = {}; pendingRefresh = {};
+    quiz.replaceChildren();
+    AREAS.forEach(function (ar) {
+      var qs = QUESTIONS.filter(function (q) { return q.area === ar.id; });
+      if (!qs.length) return;
+      var sec = el("section", { class: "area", id: "area-" + ar.id });
+      quiz.appendChild(sec);
+      sec.appendChild(el("div", { class: "area-head" }, [el("h2", { text: (AREAS.length > 1 ? ar.id + ". " : "") + ar.name }), el("span", { class: "tag", text: qs.length + (qs.length === 1 ? " question · " : " questions · ") + AREA_MAX[ar.id] + " pts" })]));
+      perm(qs.length, "area:" + ar.id).forEach(function (i) {
+        var q = qs[i], card = el("article", { class: "qcard", id: "card-" + q.id, "data-qid": q.id });
+        sec.appendChild(card);
+        cards[q.id] = card;
+        fillCard(card, q);
+      });
+    });
+    updateAll(); applyFilter();
+  }
+  function renderFilters() {
+    var nav = document.getElementById("filters");
+    var open = QUESTIONS.filter(function (q) { var a = peek(q.id); return !(a && a.locked); }).length;
+    var defs = [["all", "All"]];
+    if (AREAS.length > 1) AREAS.forEach(function (a) { defs.push([a.id, a.short || a.name]); });
+    defs.push(["open", "Unanswered (" + open + ")"]);
+    nav.replaceChildren();
+    defs.forEach(function (d) { nav.appendChild(el("button", { class: "chip", type: "button", "aria-pressed": filter === d[0] ? "true" : "false", text: d[1], onclick: function () { filter = d[0]; renderFilters(); applyFilter(); } })); });
+  }
+  function applyFilter() {
+    AREAS.forEach(function (ar) {
+      var sec = document.getElementById("area-" + ar.id); if (!sec) return;
+      var any = false;
+      QUESTIONS.forEach(function (q) {
+        if (q.area !== ar.id) return;
+        var a = peek(q.id), show = filter === "all" || filter === ar.id || (filter === "open" && !(a && a.locked));
+        cards[q.id].hidden = !show; if (show) any = true;
+      });
+      sec.hidden = !any;
+    });
+  }
+  function summaryOf(attempt, note) {
+    var s = { attemptId: attempt.id, date: Date.now(), total: 0, max: TOTAL_MAX, answered: 0, possible: 0, guessPts: 0, guesses: 0, areas: {}, lost: {} };
+    if (note) s.note = note;
+    AREAS.forEach(function (a) { s.areas[a.id] = 0; s.lost[a.id] = 0; });
+    QUESTIONS.forEach(function (q) {
+      var a = attempt.answers[q.id];
+      if (a && a.guessed) s.guesses++;
+      if (!a || !a.locked) return;
+      s.answered++; s.total += a.earned; s.possible += q._pts;
+      s.areas[q.area] += a.earned; s.lost[q.area] += q._pts - a.earned;
+      if (a.guessed) s.guessPts += a.earned;
+    });
+    return s;
+  }
+  function updateAll() {
+    var s = summaryOf(att());
+    document.getElementById("sTotal").innerHTML = fmtPts(s.total) + " <small>/ " + TOTAL_MAX + " pts</small>";
+    document.getElementById("sAnswered").textContent = String(s.answered);
+    document.getElementById("sCount").textContent = String(QUESTIONS.length);
+    document.getElementById("sAcc").textContent = s.possible ? Math.round(100 * s.total / s.possible) + "%" : "–";
+    document.getElementById("sGuess").textContent = fmtPts(s.guessPts);
+    document.getElementById("mTotal").textContent = fmtPts(s.total);
+    document.getElementById("mMax").textContent = String(TOTAL_MAX);
+    document.getElementById("mAnswered").textContent = s.answered + " / " + QUESTIONS.length + " answered";
+    var bars = document.getElementById("sBars");
+    bars.replaceChildren();
+    bars.hidden = AREAS.length < 2;
+    AREAS.forEach(function (ar) {
+      var m = AREA_MAX[ar.id]; if (!m) return;
+      bars.appendChild(el("div", { class: "bar", title: ar.name }, [
+        el("div", { class: "bar-label" }, [el("span", { text: ar.short || ar.name }), el("span", { text: fmtPts(s.areas[ar.id]) + "/" + m })]),
+        el("div", { class: "bar-track" }, [el("i", { class: "g", style: "width:" + (100 * s.areas[ar.id] / m) + "%" }), el("i", { class: "r", style: "width:" + (100 * s.lost[ar.id] / m) + "%" })])
+      ]));
+    });
+    renderFocus(); renderHistory(); renderFilters();
+  }
+  function jump(id) { return function (ev) { ev.preventDefault(); filter = "all"; renderFilters(); applyFilter(); var c = cards[id]; if (c && c.scrollIntoView) c.scrollIntoView({ behavior: "smooth", block: "start" }); }; }
+  function renderFocus() {
+    var topics = {}, guessed = [];
+    QUESTIONS.forEach(function (q) {
+      var a = peek(q.id); if (!a || !a.locked) return;
+      var k = q.area + "|" + q.topic, t = topics[k] || (topics[k] = { area: q.area, topic: q.topic, earned: 0, possible: 0, ids: [] });
+      t.earned += a.earned; t.possible += q._pts;
+      if (a.earned < q._pts - 1e-9) t.ids.push(q.id);
+      if (a.guessed) guessed.push(q);
+    });
+    var weak = Object.keys(topics).map(function (k) { return topics[k]; }).filter(function (t) { return t.earned / t.possible < 0.75; }).sort(function (x, y) { return x.earned / x.possible - y.earned / y.possible; });
+    var body = document.getElementById("focusBody");
+    body.replaceChildren();
+    if (!weak.length && !guessed.length) { body.appendChild(el("p", { class: "empty", text: Object.keys(topics).length ? "No topic below 75% so far." : "Check a few answers to see your weak topics here." })); return; }
+    var ul = el("ul");
+    weak.forEach(function (t) {
+      var li = el("li", {}, [el("span", { class: "pct", text: Math.round(100 * t.earned / t.possible) + "%" }), el("span", { text: t.topic + (AREAS.length > 1 ? " (" + (AREA_BY_ID[t.area].short || AREA_BY_ID[t.area].name) + ")" : "") })]);
+      t.ids.forEach(function (id) { li.appendChild(el("a", { class: "idlink", href: "#card-" + id, text: id, onclick: jump(id) })); });
+      ul.appendChild(li);
+    });
+    if (guessed.length) {
+      var li = el("li", {}, [el("span", { class: "pct guess", text: "guessed" }), el("span", { text: "Review even if you scored:" })]);
+      guessed.forEach(function (q) { li.appendChild(el("a", { class: "idlink", href: "#card-" + q.id, text: q.id, onclick: jump(q.id) })); });
+      ul.appendChild(li);
+    }
+    body.appendChild(ul);
+  }
+  function renderHistory() {
+    var body = document.getElementById("histBody");
+    body.replaceChildren();
+    if (!doc.history.length) { body.appendChild(el("p", { class: "empty", text: "Archived attempts appear here when you start a new one." })); return; }
+    var ul = el("ul", { class: "hist" });
+    doc.history.slice().reverse().forEach(function (h) {
+      ul.appendChild(el("li", {}, [
+        el("b", { text: fmtPts(h.total) + " / " + h.max }),
+        el("span", { class: "when", text: new Date(h.date).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) }),
+        el("span", { text: h.answered + " answered · " + h.guesses + " guessed" + (h.note ? " · " + h.note : "") }),
+        AREAS.length > 1 ? el("span", { class: "hint", text: AREAS.map(function (a) { return a.id + " " + fmtPts(h.areas[a.id] || 0); }).join(" · ") }) : null
+      ]));
+    });
+    body.appendChild(ul);
+  }
+
+  /* ================= confirmation bar (no timeout, no native dialogs) ================= */
+  var confirmBar = document.getElementById("confirmBar"), confirmAction = null;
+  function openConfirm(msg, label, action) { document.getElementById("confirmMsg").textContent = msg; document.getElementById("confirmYes").textContent = label; confirmAction = action; confirmBar.hidden = false; document.getElementById("confirmYes").focus(); }
+  function closeConfirm() { confirmBar.hidden = true; confirmAction = null; }
+  document.getElementById("confirmYes").addEventListener("click", function () { var f = confirmAction; closeConfirm(); if (f) f(); });
+  document.getElementById("confirmNo").addEventListener("click", closeConfirm);
+  document.addEventListener("keydown", function (ev) { if (ev.key === "Escape" && !confirmBar.hidden) closeConfirm(); });
+  document.getElementById("btnNew").addEventListener("click", function () {
+    var s = summaryOf(att());
+    openConfirm("Archive this attempt (" + fmtPts(s.total) + " / " + TOTAL_MAX + " pts, " + s.answered + " answered) to the history and start a reshuffled one?", "Archive and start new", function () {
+      var old = att();
+      if (hasProgress(old)) doc.history.push(summaryOf(old));
+      doc.superseded = uniq(doc.superseded.concat([old.id]));
+      doc.attempt = blankAttempt();
+      save(); renderAll(); window.scrollTo(0, 0);
+    });
+  });
+  document.getElementById("btnReset").addEventListener("click", function () {
+    var s = summaryOf(att());
+    openConfirm("Clear all " + s.answered + " checked answers and every draft in this attempt? The question order stays the same and nothing is archived.", "Clear answers", function () {
+      var old = att();
+      doc.superseded = uniq(doc.superseded.concat([old.id]));
+      doc.attempt = blankAttempt(old.seed);
+      save(); renderAll();
+    });
+  });
+
+  /* ================= sync =================
+     Never write before the account copy has been read. Merge, never overwrite: answers merge one by one,
+     attempts are replaced only when the other device archived or reset them. Listen for changes while open. */
+  var sync = { ref: null, ready: false, remote: null, reason: "", timer: null, inFlight: false, again: false, failures: 0 };
+  function setStatus(kind, why) {
+    var n = document.getElementById("sSave");
+    var map = { ok: ["ok", "Synced to your account"], busy: ["busy", "Saving…"], connecting: ["busy", "Connecting…"], local: ["local", "This device only" + (why ? ": " + why : "")] };
+    n.className = "save " + map[kind][0]; n.textContent = map[kind][1]; n.title = map[kind][1];
+    var dot = document.getElementById("mDot"); dot.className = "dot " + map[kind][0]; dot.title = map[kind][1];
+  }
+  function cacheLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(doc)); } catch (e) { /* storage blocked: the account copy still works */ } }
+  function save() {
+    doc.savedAt = Date.now();
+    cacheLocal();
+    if (!sync.ref) { setStatus(sync.reason ? "local" : "connecting", sync.reason); return; }
+    if (!sync.ready) return;
+    setStatus("busy");
+    clearTimeout(sync.timer);
+    sync.timer = setTimeout(push, 700);
+  }
+  function push() {
+    if (!sync.ref || !sync.ready) return;
+    if (sync.inFlight) { sync.again = true; return; }
+    if (sync.remote) { var m = mergeDocs(doc, sync.remote); if (m.attempt.id !== doc.attempt.id) applyMerged(m); else { doc = m; cacheLocal(); } }
+    sync.inFlight = true;
+    var payload = JSON.stringify(doc);
+    withTimeout(sync.ref.set({ json: payload, updatedAt: Date.now() }), 10000).then(function () {
+      sync.failures = 0; sync.remote = normalizeDoc(JSON.parse(payload)); setStatus("ok");
+    }).catch(function (e) {
+      console.warn("Account save failed", e); sync.failures++;
+      setStatus("local", "saving failed, retrying");
+      clearTimeout(sync.timer); sync.timer = setTimeout(push, Math.min(30000, 2000 * sync.failures));
+    }).then(function () { sync.inFlight = false; if (sync.again) { sync.again = false; push(); } });
+  }
+  function applyMerged(merged) {
+    var prev = doc;
+    doc = merged; cacheLocal();
+    if (prev.attempt.id !== merged.attempt.id || prev.attempt.seed !== merged.attempt.seed) { renderAll(); return; }
+    var act = document.activeElement;
+    QUESTIONS.forEach(function (q) {
+      var x = prev.attempt.answers[q.id], y = merged.attempt.answers[q.id];
+      if (JSON.stringify(x || null) === JSON.stringify(y || null)) return;
+      var c = cards[q.id];
+      if (c && act && c.contains(act) && act !== document.body) pendingRefresh[q.id] = true;   // don't yank the field being typed in
+      else refresh(q);
+    });
+    updateAll();
+  }
+  document.addEventListener("focusout", function () {
+    setTimeout(function () { Object.keys(pendingRefresh).forEach(function (id) { var c = cards[id]; if (c && !c.contains(document.activeElement)) refresh(QMAP[id]); }); }, 0);
+  });
+  function onRemote(data) {
+    var r = null;
+    if (data && typeof data.json === "string") { try { r = normalizeDoc(JSON.parse(data.json)); } catch (e) { r = null; } }
+    sync.remote = r;
+    var merged = r ? (doc.savedAt === 0 && !hasProgress(doc.attempt) ? clone(r) : mergeDocs(doc, r)) : doc;
+    if (r) applyMerged(merged);
+    var first = !sync.ready;
+    sync.ready = true;
+    if (needsPush(doc, r)) { setStatus("busy"); clearTimeout(sync.timer); sync.timer = setTimeout(push, first ? 0 : 300); }
+    else setStatus("ok");
+  }
+  function withTimeout(p, ms) {
+    return new Promise(function (res, rej) {
+      var t = setTimeout(function () { rej(new Error("timeout")); }, ms);
+      Promise.resolve(p).then(function (v) { clearTimeout(t); res(v); }, function (e) { clearTimeout(t); rej(e); });
+    });
+  }
+  function offline(why) { sync.reason = why; setStatus("local", why); }
+  function connect() {
+    var c = window.claude;
+    if (!c || typeof c.use !== "function") { offline("account storage is not available here"); return; }
+    withTimeout(Promise.all([c.use("db"), c.use("user")]), 10000).then(function (r) {
+      var db = r[0], user = r[1];
+      if (!db || !user) throw new Error("sign in to save to your account");
+      return withTimeout(user.id(), 10000).then(function (id) {
+        if (!id) throw new Error("sign in to save to your account");
+        sync.ref = db.collection("data/users/" + id).doc(SLUG);
+        if (typeof sync.ref.onSnapshot === "function") {
+          var first = true;
+          var timer = setTimeout(function () { if (first) offline("the account did not answer"); }, 10000);
+          sync.ref.onSnapshot(function (snap) {
+            if (first) { first = false; clearTimeout(timer); sync.reason = ""; }
+            onRemote(snap && snap.exists ? snap.data() : null);
+          }, function (e) { console.warn("Live sync stopped", e); if (!sync.ready) offline("could not read your account copy"); else setStatus("local", "live sync stopped; reload to reconnect"); });
+        } else {
+          return withTimeout(sync.ref.get(), 10000).then(function (snap) { onRemote(snap && snap.exists ? snap.data() : null); });
+        }
+      });
+    }).catch(function (e) { console.warn("Account storage unavailable", e); offline(e && /sign in/.test(e.message) ? e.message : "account storage is not available here"); });
+  }
+
+  /* ================= boot ================= */
+  try { var raw = localStorage.getItem(LS_KEY); if (raw) doc = normalizeDoc(JSON.parse(raw)); } catch (e) { doc = null; }
+  if (!doc) doc = blankDoc();
+  renderAll();
+  connect();
+  window.__ptb = { doc: function () { return doc; }, mergeDocs: mergeDocs };   // read-only hook for the smoke test
+})();
+</script>
