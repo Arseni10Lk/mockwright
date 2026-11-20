@@ -16,6 +16,32 @@ MockWright turns your course material into an interactive practice exam. Give Cl
 - A Claude plan with artifacts, used in an environment where Claude can run commands.
 - Node.js 18 or newer, and npm for the one-time test dependency.
 
+## Install
+
+**In Claude Code** (the command line, or the Code tab of the Claude desktop app), install straight from GitHub. On Claude Code 2.1.275 or later, type in a session:
+
+```
+/plugin install mockwright --marketplace Arseni10Lk/mockwright
+```
+
+On older versions, add the marketplace first, then install:
+
+```
+/plugin marketplace add Arseni10Lk/mockwright
+/plugin install mockwright@mockwright
+```
+
+The same works from a terminal:
+
+```bash
+claude plugin marketplace add Arseni10Lk/mockwright
+claude plugin install mockwright@mockwright
+```
+
+Start a new session afterwards. Claude uses MockWright on its own whenever you ask for a practice test or mock exam, and you can also call it directly with `/mockwright:practice-test`.
+
+**From Claude's plugin directory:** once MockWright is listed there, you can install it with one click from the directory instead.
+
 ## How to use it
 
 1. **Give Claude the material.** Point it to your slides, PDFs, notes or a topic list, for example: *"Make me a practice test for my deep learning exam from the PDFs in this folder."*
@@ -42,6 +68,7 @@ I originally created it to prepare for exams in various engineering subjects fro
 
 ```
 .claude-plugin/plugin.json          plugin manifest
+.claude-plugin/marketplace.json     lets Claude Code install the plugin straight from this repository
 .claude-plugin/icon.png             listing icon (1024×1024)
 art/mockwright-icon.svg             icon source
 skills/practice-test/SKILL.md       how Claude writes, builds, tests and reviews a practice test

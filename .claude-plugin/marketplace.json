@@ -1,0 +1,14 @@
+{
+  "name": "mockwright",
+  "description": "MockWright: interactive practice exams from your course material",
+  "owner": {
+    "name": "Arseni Lysak"
+  },
+  "plugins": [
+    {
+      "name": "mockwright",
+      "source": "./",
+      "description": "Turns course material into an interactive practice exam that tests recall rather than reading."
+    }
+  ]
+}
