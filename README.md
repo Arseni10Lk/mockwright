@@ -69,8 +69,6 @@ I originally created it to prepare for exams in various engineering subjects fro
 ```
 .claude-plugin/plugin.json          plugin manifest
 .claude-plugin/marketplace.json     lets Claude Code install the plugin straight from this repository
-.claude-plugin/icon.png             listing icon (1024×1024)
-art/mockwright-icon.svg             icon source
 skills/practice-test/SKILL.md       how Claude writes, builds, tests and reviews a practice test
 skills/practice-test/assets/        the page template (engine, styles, sync)
 skills/practice-test/scripts/       build.js (data checks and build) and smoke.js (automated test)
