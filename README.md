@@ -76,6 +76,10 @@ skills/practice-test/references/    the question data format
 skills/practice-test/examples/      a complete example quiz
 ```
 
+## Feedback and issues
+
+If something doesn't work the way you expected, or you have an idea that would make MockWright better, please [open an issue](https://github.com/Arseni10Lk/mockwright/issues). Bug reports, confusing behavior, questions that came out badly, and feature suggestions are all welcome. For a bug, it helps to say what you asked Claude, what you expected, and what happened instead.
+
 ## License and attribution
 
 Copyright 2026 Arseni Lysak. Licensed under the [Apache License, Version 2.0](LICENSE).
